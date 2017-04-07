@@ -13,6 +13,7 @@ import (
 	"path/filepath"
 	"regexp"
 	"strings"
+	"time"
 
 	"github.com/db-journey/migrate/driver"
 	"github.com/robfig/cron"
@@ -36,8 +37,9 @@ func New(driver driver.Driver) *scheduler {
 
 // Each job scheduled will create a Run entry for logging
 type Run struct {
-	Name  string
-	Error error
+	Name     string
+	Error    error
+	Duration time.Duration
 }
 
 var cronRE = regexp.MustCompile(`^.*cron:\s+(.*)\n`)
@@ -68,10 +70,12 @@ func (scheduler *scheduler) ReadFiles(dirname string) error {
 		jobName := strings.TrimSuffix(f.Name(), filepath.Ext(f.Name()))
 
 		runFunc := func() {
+			start := time.Now()
 			err := scheduler.driver.Execute(content)
 			scheduler.runs <- &Run{
-				Name:  jobName,
-				Error: err,
+				Name:     jobName,
+				Error:    err,
+				Duration: time.Since(start),
 			}
 		}
 		if err := scheduler.AddFunc(spec, runFunc); err != nil {
