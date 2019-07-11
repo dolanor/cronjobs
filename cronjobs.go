@@ -78,7 +78,7 @@ func (scheduler *scheduler) ReadFiles(dirname string) error {
 				Duration: time.Since(start),
 			}
 		}
-		if err := scheduler.AddFunc(spec, runFunc); err != nil {
+		if _, err := scheduler.AddFunc(spec, runFunc); err != nil {
 			return fmt.Errorf(`File %s: %s`, fPath, err)
 		}
 	}
